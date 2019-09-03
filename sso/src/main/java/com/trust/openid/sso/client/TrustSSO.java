@@ -144,7 +144,8 @@ public class TrustSSO {
                 "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!145D.F522.FFC3.439E", //header: Autentia-Client-Id= client_id
                 authorizeSSO.getGrantType(),
                 authorizeSSO.getScope(),
-                authorizeSSO.getCode())
+                authorizeSSO.getCode(),
+                "trust.enrollment.app://auth.id")
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
                     public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {

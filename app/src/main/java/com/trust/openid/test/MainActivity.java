@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
                         .setClientSecret("P2qr7PbPR3QxMMRIJwxqWO81")
                         .setMethodAuthorize("authorize")
                         .setMethodToken("token")
-                        .setGrantType("refresh_token")
+                        .setGrantType("authorization_code")
                         .setResponseType("code")
                         .setHeaders(new Bundle[]{header})
                         .build();

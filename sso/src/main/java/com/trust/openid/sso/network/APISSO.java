@@ -18,7 +18,8 @@ public interface APISSO {
                               @Header("Autentia-Client-Id") String aci,
                               @Field("grant_type") String code,
                               @Field("scope") String scope,
-                              @Field("code") String grant_type);
+                              @Field("code") String grant_type,
+                              @Field("redirect_uri") String redirectUri);
 
     @POST("token")
     Call<TokenResponse> token2(@Header("Authorization") String bearer,
