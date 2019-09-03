@@ -1,11 +1,11 @@
 package com.trust.openid.sso.model;
 
-public class Authorize {
+public class AuthorizeSSO {
     private String code;
     private String scope;
     private String grantType;
 
-    public Authorize() {
+    public AuthorizeSSO() {
     }
 
     public String getCode() {

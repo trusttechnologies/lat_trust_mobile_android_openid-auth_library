@@ -1,6 +1,6 @@
 package com.trust.openid.sso.network;
 
-import com.trust.openid.sso.model.Authorize;
+import com.trust.openid.sso.model.AuthorizeSSO;
 import com.trust.openid.sso.network.res.TokenResponse;
 
 import retrofit2.Call;
@@ -23,5 +23,5 @@ public interface APISSO {
     @POST("token")
     Call<TokenResponse> token2(@Header("Authorization") String bearer,
                                @Header("Autentia-Client-Id") String aci,
-                               @Body Authorize authorize);
+                               @Body AuthorizeSSO authorize);
 }

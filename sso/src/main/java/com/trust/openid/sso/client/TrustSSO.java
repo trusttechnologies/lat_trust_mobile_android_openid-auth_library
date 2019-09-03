@@ -1,6 +1,7 @@
 package com.trust.openid.sso.client;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Browser;
@@ -10,19 +11,24 @@ import android.util.Log;
 import androidx.browser.customtabs.CustomTabsIntent;
 
 import com.orhanobut.hawk.Hawk;
-import com.trust.openid.sso.ConstantsSSO;
-import com.trust.openid.sso.model.Authorize;
+import com.trust.openid.sso.TrustLoggerSSO;
+import com.trust.openid.sso.model.AuthorizeSSO;
+import com.trust.openid.sso.network.APISSO;
 import com.trust.openid.sso.network.RestClientSSO;
 import com.trust.openid.sso.network.res.TokenResponse;
-
-import javax.security.auth.login.LoginException;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static com.trust.openid.sso.client.ConstantsSSO.ACR_VALUE;
+import static com.trust.openid.sso.client.ConstantsSSO.CLIENT_ID;
+import static com.trust.openid.sso.client.ConstantsSSO.CODE;
+import static com.trust.openid.sso.client.ConstantsSSO.REDIRECT_URI;
+import static com.trust.openid.sso.client.ConstantsSSO.RESPONSE_TYPE;
+import static com.trust.openid.sso.client.ConstantsSSO.SCOPE;
+
 public class TrustSSO {
-    private static final String TAG = TrustSSO.class.getSimpleName();
     private String clientID;
     private String clientSecret;
     private String scopes;
@@ -35,98 +41,187 @@ public class TrustSSO {
     private String methodToken;
     private String methodAuthorize;
     private Context context;
+    private String responseType;
 
+    private static TrustSSO instance = new TrustSSO();
 
     private TrustSSO() {
     }
 
-    //todo method authorization
+    public void setAcrValues(String acrValues) {
+        this.acrValues = acrValues;
+    }
+
+    public String getAcrValues() {
+        return acrValues;
+    }
+
+    public static TrustSSO getInstance() {
+        return instance;
+
+    }
+
+    public String getClientID() {
+        return clientID;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
     public void authorizationRequest() {
-        String url = this.baseURL + this.methodAuthorize
-                + "?scope=" + this.scopes
-                + "&response_type=code&redirect_uri=" + this.redirecUri
-                + "&client_id=" + this.clientID
-                + "&acr_values=" + this.acrValues;
-
-
-        Log.i(TAG, "authorizationRequest: " + url);
-        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-        CustomTabsIntent customTabsIntent = builder.build();
-        Bundle headers = new Bundle();
-        headers.putString("Autentia-Client-Id", this.clientID);
-        customTabsIntent.intent.putExtra(Browser.EXTRA_HEADERS, headers);
-        customTabsIntent.launchUrl(this.context, Uri.parse(url));
-        /*
-         * https://api.autentia.id/oidc/authorize
-         * ?scope={{scope}}
-         * &response_type={{response_type}}
-         * &redirect_uri ={{redirect_uri}}
-         * &client_id={{client_id}}
-         * &acr_values={{acr_values}}
-         * &state={{state}}'
-         * */
-    }
-
-
-    public static void retrieveUriResponse(Uri data) {
-        Log.i(TAG, "retrieveUriResponse: " + data);
-
-        Authorize authorize = new Authorize();
-        authorize.setCode(data.getQueryParameter("code"));
-        authorize.setGrantType("authorization_code");
-        String a = data.getQueryParameter("scope");
-        String b = a.replaceAll(" ", "+");
-        authorize.setScope("openid uma_protection profile profile.r profile.w address audit.r audit.w");
-        //authorize.setScope(data.getQueryParameter("scope"));
-        getToken(authorize);
-    }
-
-    private static void getToken(Authorize authorize) {
         try {
-            String base = "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!145D.F522.FFC3.439E:P2qr7PbPR3QxMMRIJwxqWO81";
-            byte[] data = base.getBytes("UTF-8");
-            String base64 = Base64.encodeToString(data, Base64.DEFAULT);
-            RestClientSSO.get().token("Basic QCEzMDExLjZGMEEuQjE5MC44NDU3ITAwMDEhMjk0RS5CMENEITAwMDghMTQ1RC5GNTIyLkZGQzMuNDM5RTpQMnFyN1BiUFIzUXhNTVJJSnd4cVdPODE=",
-                    "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!145D.F522.FFC3.439E",
-                    authorize.getGrantType(),
-                    authorize.getScope(),
-                    authorize.getCode()).enqueue(new Callback<TokenResponse>() {
-                @Override
-                public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
-                    Log.i(TAG, "onResponse: " + response.code());
-                }
-
-                @Override
-                public void onFailure(Call<TokenResponse> call, Throwable t) {
-                    Log.i(TAG, "getToken: " + t.getMessage());
-                }
-            });
-
-          /*  RestClientSSO.get().token2("Basic QCEzMDExLjZGMEEuQjE5MC44NDU3ITAwMDEhMjk0RS5CMENEITAwMDghMTQ1RC5GNTIyLkZGQzMuNDM5RTpQMnFyN1BiUFIzUXhNTVJJSnd4cVdPODE=", "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!145D.F522.FFC3.439E", authorize).enqueue(new Callback<TokenResponse>() {
-                @Override
-                public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
-                    Log.i(TAG, "onResponse: " + response.code());
-
-                }
-
-                @Override
-                public void onFailure(Call<TokenResponse> call, Throwable t) {
-                    Log.i(TAG, "onFailure:  " + t.getMessage());
-                }
-            });*/
+            Uri uri = getUriAuthorize();
+            TrustLoggerSSO.d("authorizationRequest: " + uri.toString());
+            launchCustomTab(uri);
         } catch (Exception ex) {
-            Log.i(TAG, "getToken: " + ex.getMessage());
+            TrustLoggerSSO.d("Authorization Request: " + ex.getMessage());
         }
 
+    }
+
+    private void launchCustomTab(Uri uri) {
+        try {
+            CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+            CustomTabsIntent customTabsIntent = builder.build();
+            if (this.headers != null && this.headers.length > 0) {
+                customTabsIntent.intent.putExtra(Browser.EXTRA_HEADERS, headers);
+            }
+            customTabsIntent.launchUrl(this.context, uri);
+        } catch (Exception ex) {
+            TrustLoggerSSO.d("Launch Custom Tab: " + ex.getMessage());
+        }
+
+    }
+
+    private Uri getUriAuthorize() {
+        return Uri.parse(this.baseURL)
+                .buildUpon()
+                .appendPath(this.methodAuthorize)
+                .appendQueryParameter(SCOPE, this.scopes)
+                .appendQueryParameter(RESPONSE_TYPE, this.responseType)
+                .appendQueryParameter(REDIRECT_URI, this.redirecUri)
+                .appendQueryParameter(CLIENT_ID, this.clientID)
+                .appendQueryParameter(ACR_VALUE, this.acrValues).build();
+    }
+
+    public void getToken(Intent intent, TrustAuthListener authListener) {
+        try {
+            Uri data = getUriFromIntent(intent);
+            if (data == null) {
+                throw new Exception("Get Token: data from intent cannot be null");
+            }
+            AuthorizeSSO authorizeSSO = getAuthorizeSSO(data);
+            getTokenFromApi(authorizeSSO, authListener);
+        } catch (Exception ex) {
+            TrustLoggerSSO.d("Get Token: " + ex.getMessage());
+        }
+
+    }
+
+    private void getTokenFromApi(AuthorizeSSO authorizeSSO, TrustAuthListener listener) {
+        validateAuthorizeSSO(authorizeSSO);
+        if (this.headers != null || this.headers.length > 0) {
+            getTokenWithCustomHeaders(authorizeSSO, listener);
+        } else {
+            getTokenDefault(authorizeSSO);
+        }
+    }
+
+    private void getTokenDefault(AuthorizeSSO authorizeSSO) {
+        //llamada para obtener access token con 0 cabeceras
+
+    }
+
+    private void getTokenWithCustomHeaders(AuthorizeSSO authorizeSSO, final TrustAuthListener listener) {
+        //todo
+        //llamada para obtener access token con 1 o mas cabeceras
+        //quiza para pruebas debas harcodear esta parte, aqui se hace
+        //la llamada a /token para obtener access_token, este es el
+        //metodo que retornaba un code400 o un code500
+        RestClientSSO.get().token(
+                "Basic QCEzMDExLjZGMEEuQjE5MC44NDU3ITAwMDEhMjk0RS5CMENEITAwMDghMTQ1RC5GNTIyLkZGQzMuNDM5RTpQMnFyN1BiUFIzUXhNTVJJSnd4cVdPODE=", //base64(client_id:client_secret)
+                "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!145D.F522.FFC3.439E", //header: Autentia-Client-Id= client_id
+                authorizeSSO.getGrantType(),
+                authorizeSSO.getScope(),
+                authorizeSSO.getCode())
+                .enqueue(new Callback<TokenResponse>() {
+                    @Override
+                    public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
+                        if (response.code() != 400 && response.code() != 500 && response.body() != null) {
+                            listener.onSucces(response.body().getAccess_token());
+                        } else {
+                            listener.onError(response.message());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<TokenResponse> call, Throwable t) {
+                        listener.onError(t.getMessage());
+                    }
+                });
+    }
+
+
+    private void validateAuthorizeSSO(AuthorizeSSO authorizeSSO) {
+        try {
+            if (authorizeSSO == null) {
+                throw new Exception("Validate AuthorizeSSO: authorizeSSO cannot be null");
+            }
+            if (authorizeSSO.getCode() == null || authorizeSSO.getCode().equals("")) {
+                throw new Exception("Validate AuthorizeSSO: code cannot be null or empty");
+            }
+            if (authorizeSSO.getGrantType() == null || authorizeSSO.getGrantType().equals("")) {
+                throw new Exception("Validate AuthorizeSSO: grant type cannot be null or empty");
+            }
+            if (authorizeSSO.getScope() == null || authorizeSSO.getScope().equals("")) {
+                throw new Exception("Validate AuthorizeSSO: scope cannot be null or empty");
+            }
+        } catch (Exception ex) {
+            TrustLoggerSSO.d("Validate AuthorizeSSO: " + ex.getMessage());
+        }
+
+    }
+
+    private AuthorizeSSO getAuthorizeSSO(Uri data) {
+        AuthorizeSSO authorize = new AuthorizeSSO();
+        if (data == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: data uri cannot be null");
+            return new AuthorizeSSO();
+        }
+        if (data.getQueryParameter(CODE) == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: code cannot be null");
+            return new AuthorizeSSO();
+        }
+        if (data.getQueryParameter(SCOPE) == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: scope cannot be null");
+            return new AuthorizeSSO();
+        }
+        if (this.grantType == null || this.grantType.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: grant type cannot be null");
+            return new AuthorizeSSO();
+        }
+        authorize.setCode(data.getQueryParameter(CODE));
+        authorize.setGrantType(this.grantType);
+        authorize.setScope(data.getQueryParameter(SCOPE));
+        return authorize;
+    }
+
+    private Uri getUriFromIntent(Intent intent) {
+        Uri data = null;
+        if (intent != null && intent.getData() != null) {
+            data = intent.getData();
+        } else {
+            TrustLoggerSSO.d("Get Uri From Intent: intent cannot be null");
+        }
+        TrustLoggerSSO.d(data.toString());
+        return data;
     }
 
 
     //todo method token
     //todo method refresh
-    private Bundle[] getHeaders() {
-        return this.headers;
-    }
-
+    //todo method logout
     public interface TrustAuthListener {
 
         void onSucces(String accessToken);
@@ -148,6 +243,7 @@ public class TrustSSO {
         private String grantType;
         private String methodToken;
         private String methodAuthorize;
+        private String responseType;
 
         public TrustSSOBuilder(Context context) {
             this.context = context;
@@ -158,7 +254,7 @@ public class TrustSSO {
             if (clientID != null && !clientID.equals("")) {
                 this.clientID = clientID;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Client Id cannot be null or empty");
             }
             return this;
         }
@@ -167,7 +263,7 @@ public class TrustSSO {
             if (clientSecret != null && !clientSecret.equals("")) {
                 this.clientSecret = clientSecret;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Client Secret cannot be null or empty");
             }
             return this;
         }
@@ -176,7 +272,7 @@ public class TrustSSO {
             if (scopes != null && !scopes.equals("")) {
                 this.scopes = scopes;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("scopes cannot be null or empty");
             }
             return this;
         }
@@ -185,7 +281,7 @@ public class TrustSSO {
             if (headers != null && headers.length > 0) {
                 this.headers = headers;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Headers cannot be null or empty");
             }
             return this;
         }//arreglo
@@ -194,7 +290,7 @@ public class TrustSSO {
             if (acrValues != null && !acrValues.equals("")) {
                 this.acrValues = acrValues;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Acr Values Secret cannot be null or empty");
             }
             return this;
         }
@@ -203,7 +299,7 @@ public class TrustSSO {
             if (acrKey != null && !acrKey.equals("")) {
                 this.acrKey = acrKey;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Acr Key cannot be null or empty");
             }
             return this;
         }
@@ -212,7 +308,7 @@ public class TrustSSO {
             if (redirectUri != null && !redirectUri.equals("")) {
                 this.redirectUri = redirectUri;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Redirect URI cannot be null or empty");
             }
             return this;
         }
@@ -222,7 +318,7 @@ public class TrustSSO {
                 this.baseURL = baseURL;
                 Hawk.put(ConstantsSSO.BASE_URL_SSO, baseURL);
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Base URL  cannot be null or empty");
             }
             return this;
         }
@@ -231,7 +327,7 @@ public class TrustSSO {
             if (grantType != null && !grantType.equals("")) {
                 this.grantType = grantType;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Grant Type cannot be null or empty");
             }
             return this;
         }
@@ -240,7 +336,7 @@ public class TrustSSO {
             if (methodToken != null && !methodToken.equals("")) {
                 this.methodToken = methodToken;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Method Token cannot be null or empty");
             }
             return this;
         }
@@ -249,26 +345,42 @@ public class TrustSSO {
             if (methodAuthorize != null && !methodAuthorize.equals("")) {
                 this.methodAuthorize = methodAuthorize;
             } else {
-                //todo log error
+                TrustLoggerSSO.d("Method Authorize cannot be null or empty");
+            }
+            return this;
+        }
+
+        public TrustSSOBuilder setResponseType(String responseType) {
+            if (responseType != null && !responseType.equals("")) {
+                this.responseType = responseType;
+            } else {
+                TrustLoggerSSO.d("Response Type cannot be null or empty");
+
             }
             return this;
         }
 
         public TrustSSO build() {
-            TrustSSO trustSSO = new TrustSSO();
-            trustSSO.clientID = this.clientID;
-            trustSSO.clientSecret = this.clientSecret;
-            trustSSO.acrKey = this.acrKey;
-            trustSSO.acrValues = this.acrValues;
-            trustSSO.baseURL = this.baseURL;
-            trustSSO.grantType = this.grantType;
-            trustSSO.headers = this.headers;
-            trustSSO.methodAuthorize = this.methodAuthorize;
-            trustSSO.methodToken = this.methodToken;
-            trustSSO.redirecUri = this.redirectUri;
-            trustSSO.scopes = this.scopes;
-            trustSSO.context = this.context;
-            return trustSSO;
+            try {
+                instance.clientID = this.clientID;//
+                instance.clientSecret = this.clientSecret;//
+                instance.acrKey = this.acrKey;
+                instance.acrValues = this.acrValues;
+                instance.baseURL = this.baseURL;//
+                instance.grantType = this.grantType;
+                instance.headers = this.headers;
+                instance.methodAuthorize = this.methodAuthorize;//
+                instance.methodToken = this.methodToken;//
+                instance.redirecUri = this.redirectUri;//
+                instance.scopes = this.scopes;//
+                instance.responseType = this.responseType;
+                instance.context = this.context;//
+                return instance;
+
+            } catch (Exception ex) {
+                return new TrustSSO();
+            }
+
         }
     }
 }

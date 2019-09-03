@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
                         .setMethodAuthorize("authorize")
                         .setMethodToken("token")
                         .setGrantType("refresh_token")
+                        .setResponseType("code")
                         .setHeaders(new Bundle[]{header})
                         .build();
 
@@ -40,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
 
 
 }

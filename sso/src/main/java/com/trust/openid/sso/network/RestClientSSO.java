@@ -1,7 +1,7 @@
 package com.trust.openid.sso.network;
 
 import com.orhanobut.hawk.Hawk;
-import com.trust.openid.sso.ConstantsSSO;
+import com.trust.openid.sso.client.ConstantsSSO;
 
 import java.util.concurrent.TimeUnit;
 
