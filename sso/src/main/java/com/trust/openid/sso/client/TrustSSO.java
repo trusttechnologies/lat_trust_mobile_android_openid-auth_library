@@ -3,6 +3,7 @@ package com.trust.openid.sso.client;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.nfc.cardemulation.HostApduService;
 import android.provider.Browser;
 import android.util.Base64;
 
@@ -24,6 +25,7 @@ import retrofit2.Response;
 
 import static com.trust.openid.sso.client.ConstantsSSO.ACR_VALUE;
 import static com.trust.openid.sso.client.ConstantsSSO.AUTHORIZATIONSSO;
+import static com.trust.openid.sso.client.ConstantsSSO.BASE_URL_SSO;
 import static com.trust.openid.sso.client.ConstantsSSO.CLIENT_ID;
 import static com.trust.openid.sso.client.ConstantsSSO.CODE;
 import static com.trust.openid.sso.client.ConstantsSSO.REDIRECT_URI;
@@ -51,9 +53,6 @@ public class TrustSSO {
     private String responseType;
     private String session_id;
     private String session_state;
-
-
-
 
 
     private static TrustSSO instance = new TrustSSO();
@@ -87,6 +86,18 @@ public class TrustSSO {
 
     public static TrustSSO getInstance() {
         return instance;
+    }
+
+    public static boolean getTokenState() {
+        return Hawk.contains(TOKENRESPONSESSO);
+    }
+
+    public static void clearDataSession() {
+        Hawk.delete(TOKENRESPONSESSO);
+        Hawk.delete(AUTHORIZATIONSSO);
+        Hawk.delete(TIME_OUT);
+        Hawk.delete(REFRESH_TOKEN);
+        Hawk.delete(BASE_URL_SSO);
     }
 
     public void authorizationRequest() {
@@ -454,7 +465,7 @@ public class TrustSSO {
         public TrustSSOBuilder setBaseUrl(String baseURL) {
             if (baseURL != null && !baseURL.equals("")) {
                 this.baseURL = baseURL;
-                Hawk.put(ConstantsSSO.BASE_URL_SSO, baseURL);
+                Hawk.put(BASE_URL_SSO, baseURL);
             } else {
                 TrustLoggerSSO.d("Base URL  cannot be null or empty");
             }
