@@ -1,13 +1,19 @@
 package com.trust.openid.sso.network;
 
+import android.os.Bundle;
+
 import com.trust.openid.sso.model.AuthorizeSSO;
 import com.trust.openid.sso.network.res.TokenResponse;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.Header;
+import retrofit2.http.HeaderMap;
 import retrofit2.http.POST;
 
 public interface APISSO {
@@ -15,13 +21,22 @@ public interface APISSO {
     @FormUrlEncoded
     @POST("token")
     Call<TokenResponse> token(@Header("Authorization") String bearer,
-                              @Header("Autentia-Client-Id") String aci,
+                              @HeaderMap HashMap<String, String> headers,
                               @Field("grant_type") String code,
                               @Field("scope") String scope,
-                              @Field("code") String grant_type);
+                              @Field("code") String grant_type,
+                              @Field("redirect_uri") String redirect_uri
 
+    );
+
+    @FormUrlEncoded
     @POST("token")
-    Call<TokenResponse> token2(@Header("Authorization") String bearer,
-                               @Header("Autentia-Client-Id") String aci,
-                               @Body AuthorizeSSO authorize);
+    Call<TokenResponse> refreshToken(@Header("Authorization") String bearer,
+                                     @Header("Autentia-Client-Id") String aci,
+                                     @Field("grant_type") String grant_type,
+                                     @Field("client_id") String client_id,
+                                     @Field("client_secret") String client_secret,
+                                     @Field("refresh_token") String refresh_token
+
+    );
 }

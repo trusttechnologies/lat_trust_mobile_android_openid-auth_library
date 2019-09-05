@@ -19,7 +19,7 @@
 
                 <data
                     android:host="auth.id"
-                    android:scheme="trust.enrollment.app" />
+                    android:scheme="identidad.digital" />
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity">
@@ -32,3 +32,5 @@
     </application>
 
 </manifest>
+
+

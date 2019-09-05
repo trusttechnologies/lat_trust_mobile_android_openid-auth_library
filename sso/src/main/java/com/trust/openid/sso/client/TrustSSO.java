@@ -3,36 +3,43 @@ package com.trust.openid.sso.client;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.provider.Browser;
 import android.util.Base64;
-import android.util.Log;
 
 import androidx.browser.customtabs.CustomTabsIntent;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.orhanobut.hawk.Hawk;
 import com.trust.openid.sso.TrustLoggerSSO;
 import com.trust.openid.sso.model.AuthorizeSSO;
-import com.trust.openid.sso.network.APISSO;
 import com.trust.openid.sso.network.RestClientSSO;
 import com.trust.openid.sso.network.res.TokenResponse;
+
+import java.util.HashMap;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 import static com.trust.openid.sso.client.ConstantsSSO.ACR_VALUE;
+import static com.trust.openid.sso.client.ConstantsSSO.AUTHORIZATIONSSO;
 import static com.trust.openid.sso.client.ConstantsSSO.CLIENT_ID;
 import static com.trust.openid.sso.client.ConstantsSSO.CODE;
 import static com.trust.openid.sso.client.ConstantsSSO.REDIRECT_URI;
+import static com.trust.openid.sso.client.ConstantsSSO.REFRESH_TOKEN;
 import static com.trust.openid.sso.client.ConstantsSSO.RESPONSE_TYPE;
 import static com.trust.openid.sso.client.ConstantsSSO.SCOPE;
+import static com.trust.openid.sso.client.ConstantsSSO.SESSION_ID;
+import static com.trust.openid.sso.client.ConstantsSSO.SESSION_STATE;
+import static com.trust.openid.sso.client.ConstantsSSO.TIME_OUT;
+import static com.trust.openid.sso.client.ConstantsSSO.TOKENRESPONSESSO;
 
 public class TrustSSO {
     private String clientID;
     private String clientSecret;
     private String scopes;
-    private Bundle[] headers;
+    private HashMap<String, String> headers;
     private String acrValues;
     private String acrKey;
     private String redirecUri;
@@ -42,10 +49,32 @@ public class TrustSSO {
     private String methodAuthorize;
     private Context context;
     private String responseType;
+    private String session_id;
+    private String session_state;
+
+
+
+
 
     private static TrustSSO instance = new TrustSSO();
 
     private TrustSSO() {
+    }
+
+    public String getSession_id() {
+        return session_id;
+    }
+
+    private void setSession_id(String session_id) {
+        this.session_id = session_id;
+    }
+
+    public String getSession_state() {
+        return session_state;
+    }
+
+    private void setSession_state(String session_state) {
+        this.session_state = session_state;
     }
 
     public void setAcrValues(String acrValues) {
@@ -58,15 +87,6 @@ public class TrustSSO {
 
     public static TrustSSO getInstance() {
         return instance;
-
-    }
-
-    public String getClientID() {
-        return clientID;
-    }
-
-    public String getClientSecret() {
-        return clientSecret;
     }
 
     public void authorizationRequest() {
@@ -84,9 +104,24 @@ public class TrustSSO {
         try {
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
             CustomTabsIntent customTabsIntent = builder.build();
-            if (this.headers != null && this.headers.length > 0) {
+            if (this.headers != null) {
+                TrustLoggerSSO.d(headers.get("Autentia-Client-Id").toString());
                 customTabsIntent.intent.putExtra(Browser.EXTRA_HEADERS, headers);
             }
+            TrustLoggerSSO.d("launchCustomTab: " + uri.toString());
+            TrustSSO trustSSO = getInstance();
+            TrustLoggerSSO.d(trustSSO.acrKey);
+            TrustLoggerSSO.d(trustSSO.acrValues);
+
+            TrustLoggerSSO.d(trustSSO.baseURL);
+            TrustLoggerSSO.d(trustSSO.clientID);
+            TrustLoggerSSO.d(trustSSO.clientSecret);
+            TrustLoggerSSO.d(trustSSO.grantType);
+            TrustLoggerSSO.d(trustSSO.methodAuthorize);
+            TrustLoggerSSO.d(trustSSO.methodToken);
+            TrustLoggerSSO.d(trustSSO.redirecUri);
+            TrustLoggerSSO.d(trustSSO.responseType);
+            TrustLoggerSSO.d(trustSSO.scopes);
             customTabsIntent.launchUrl(this.context, uri);
         } catch (Exception ex) {
             TrustLoggerSSO.d("Launch Custom Tab: " + ex.getMessage());
@@ -94,19 +129,80 @@ public class TrustSSO {
 
     }
 
+    private void refreshToken(final TrustAuthListener listener) {
+        try {
+            final Long time_past = Long.parseLong(Hawk.get(TIME_OUT).toString());
+            final Long time_now = System.currentTimeMillis() / 1000;
+            AuthorizeSSO authorizeSSO = new AuthorizeSSO();
+            TokenResponse tokenResponse = new TokenResponse();
+            if (Hawk.contains(TOKENRESPONSESSO)) {
+                JsonElement jsonElement = new Gson().toJsonTree(Hawk.get(TOKENRESPONSESSO));
+                tokenResponse = new Gson().fromJson(jsonElement, TokenResponse.class);
+                TrustLoggerSSO.d(tokenResponse.getRefresh_token());
+            }
+            if (Hawk.contains(AUTHORIZATIONSSO)) {
+                JsonElement jsonElement = new Gson().toJsonTree(Hawk.get(AUTHORIZATIONSSO));
+                authorizeSSO = new Gson().fromJson(jsonElement, AuthorizeSSO.class);
+                TrustLoggerSSO.d(authorizeSSO.getClient_id());
+            }
+            if ((time_now - time_past) > tokenResponse.getExpires_in()) {
+                RestClientSSO.get().refreshToken(
+                        "Basic " + getAuthorization(authorizeSSO),
+                        authorizeSSO.getClient_id(),
+                        REFRESH_TOKEN,
+                        authorizeSSO.getClient_id(),
+                        authorizeSSO.getClient_secret(),
+                        tokenResponse.getRefresh_token()).enqueue(new Callback<TokenResponse>() {
+                    @Override
+                    public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
+                        TrustLoggerSSO.d(response.body().getAccess_token());
+                        if (response.isSuccessful()) {
+                            Hawk.put(TIME_OUT, System.currentTimeMillis() / 1000);
+                            Hawk.put(TOKENRESPONSESSO, response.body());
+                            listener.onSucces(response.body().getAccess_token());
+                        } else {
+                            listener.onError("refresh token expired");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<TokenResponse> call, Throwable t) {
+                        listener.onError(t.getMessage());
+                    }
+                });
+            } else {
+                listener.onSucces(tokenResponse.getAccess_token());
+            }
+        } catch (Exception ex) {
+            listener.onError(ex.getMessage());
+        }
+
+
+    }
+
     private Uri getUriAuthorize() {
-        return Uri.parse(this.baseURL)
+
+        Uri uri = Uri.parse(this.baseURL)
                 .buildUpon()
                 .appendPath(this.methodAuthorize)
                 .appendQueryParameter(SCOPE, this.scopes)
                 .appendQueryParameter(RESPONSE_TYPE, this.responseType)
                 .appendQueryParameter(REDIRECT_URI, this.redirecUri)
                 .appendQueryParameter(CLIENT_ID, this.clientID)
-                .appendQueryParameter(ACR_VALUE, this.acrValues).build();
+                .appendQueryParameter(this.acrKey, this.acrValues).build();
+
+
+        TrustLoggerSSO.d("getUriAuthorize: " + this.acrValues);
+
+        return uri;
     }
 
     public void getToken(Intent intent, TrustAuthListener authListener) {
         try {
+            if (Hawk.contains(TIME_OUT)) {
+                refreshToken(authListener);
+                return;
+            }
             Uri data = getUriFromIntent(intent);
             if (data == null) {
                 throw new Exception("Get Token: data from intent cannot be null");
@@ -121,7 +217,7 @@ public class TrustSSO {
 
     private void getTokenFromApi(AuthorizeSSO authorizeSSO, TrustAuthListener listener) {
         validateAuthorizeSSO(authorizeSSO);
-        if (this.headers != null || this.headers.length > 0) {
+        if (this.headers != null) {
             getTokenWithCustomHeaders(authorizeSSO, listener);
         } else {
             getTokenDefault(authorizeSSO);
@@ -134,21 +230,20 @@ public class TrustSSO {
     }
 
     private void getTokenWithCustomHeaders(AuthorizeSSO authorizeSSO, final TrustAuthListener listener) {
-        //todo
-        //llamada para obtener access token con 1 o mas cabeceras
-        //quiza para pruebas debas harcodear esta parte, aqui se hace
-        //la llamada a /token para obtener access_token, este es el
-        //metodo que retornaba un code400 o un code500
+        String authorization = getAuthorization(authorizeSSO);
         RestClientSSO.get().token(
-                "Basic QCEzMDExLjZGMEEuQjE5MC44NDU3ITAwMDEhMjk0RS5CMENEITAwMDghMTQ1RC5GNTIyLkZGQzMuNDM5RTpQMnFyN1BiUFIzUXhNTVJJSnd4cVdPODE=", //base64(client_id:client_secret)
-                "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!145D.F522.FFC3.439E", //header: Autentia-Client-Id= client_id
+                "Basic " + authorization, //base64(client_id:client_secret)
+                this.headers, //header: Autentia-Client-Id= client_id
                 authorizeSSO.getGrantType(),
                 authorizeSSO.getScope(),
-                authorizeSSO.getCode())
+                authorizeSSO.getCode(),
+                authorizeSSO.getRedirect_uri())
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
                     public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
                         if (response.code() != 400 && response.code() != 500 && response.body() != null) {
+                            Hawk.put(TOKENRESPONSESSO, response.body());
+                            Hawk.put(TIME_OUT, System.currentTimeMillis() / 1000);
                             listener.onSucces(response.body().getAccess_token());
                         } else {
                             listener.onError(response.message());
@@ -162,6 +257,22 @@ public class TrustSSO {
                 });
     }
 
+    private String getAuthorization(AuthorizeSSO authorizeSSO) {
+        byte[] data;
+        StringBuilder authorization = new StringBuilder();
+        authorization.append(authorizeSSO.getClient_id());
+        authorization.append(":");
+        authorization.append(authorizeSSO.getClient_secret());
+        try {
+            data = authorization.toString().getBytes("UTF-8");
+            String base64 = Base64.encodeToString(data, Base64.DEFAULT);
+            TrustLoggerSSO.i(base64);
+            return base64.replaceAll(System.getProperty("line.separator", ""), "");
+        } catch (Exception ex) {
+            TrustLoggerSSO.d(ex.getMessage());
+            return null;
+        }
+    }
 
     private void validateAuthorizeSSO(AuthorizeSSO authorizeSSO) {
         try {
@@ -184,7 +295,8 @@ public class TrustSSO {
     }
 
     private AuthorizeSSO getAuthorizeSSO(Uri data) {
-        AuthorizeSSO authorize = new AuthorizeSSO();
+        TrustLoggerSSO.d(data.toString());
+        AuthorizeSSO authorizeSSO = new AuthorizeSSO();
         if (data == null) {
             TrustLoggerSSO.d("Get AuthorizeSSO: data uri cannot be null");
             return new AuthorizeSSO();
@@ -197,14 +309,43 @@ public class TrustSSO {
             TrustLoggerSSO.d("Get AuthorizeSSO: scope cannot be null");
             return new AuthorizeSSO();
         }
-        if (this.grantType == null || this.grantType.equals("")) {
-            TrustLoggerSSO.d("Get AuthorizeSSO: grant type cannot be null");
+        if (data.getQueryParameter(SESSION_ID) == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: session id cannot be null");
             return new AuthorizeSSO();
         }
-        authorize.setCode(data.getQueryParameter(CODE));
-        authorize.setGrantType(this.grantType);
-        authorize.setScope(data.getQueryParameter(SCOPE));
-        return authorize;
+        if (data.getQueryParameter(SESSION_STATE) == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: session state cannot be null");
+            return new AuthorizeSSO();
+        }
+        if (this.grantType == null || this.grantType.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: grant type cannot be null or empty");
+            return new AuthorizeSSO();
+        }
+        if (this.redirecUri == null || this.redirecUri.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: redirect uri cannot be null or empty");
+            return new AuthorizeSSO();
+        }
+        if (this.clientSecret == null || this.clientSecret.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: client secret cannot be null or empty");
+            return new AuthorizeSSO();
+        }
+        if (this.clientID == null || this.clientID.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: client id cannot be null or empty");
+            return new AuthorizeSSO();
+        }
+        authorizeSSO.setCode(data.getQueryParameter(CODE));
+        authorizeSSO.setGrantType(this.grantType);
+        authorizeSSO.setScope(data.getQueryParameter(SCOPE));
+        authorizeSSO.setRedirect_uri(this.redirecUri);
+        authorizeSSO.setClient_id(this.clientID);
+        authorizeSSO.setClient_secret(this.clientSecret);
+        authorizeSSO.setSession_id(data.getQueryParameter(SESSION_ID));
+        authorizeSSO.setSession_state(data.getQueryParameter(SESSION_STATE));
+        TrustSSO trustSSO = getInstance();
+        trustSSO.setSession_id(data.getQueryParameter(SESSION_ID));
+        trustSSO.setSession_state(data.getQueryParameter(SESSION_STATE));
+        Hawk.put(AUTHORIZATIONSSO, authorizeSSO);
+        return authorizeSSO;
     }
 
     private Uri getUriFromIntent(Intent intent) {
@@ -219,9 +360,6 @@ public class TrustSSO {
     }
 
 
-    //todo method token
-    //todo method refresh
-    //todo method logout
     public interface TrustAuthListener {
 
         void onSucces(String accessToken);
@@ -235,7 +373,7 @@ public class TrustSSO {
         private String clientID;
         private String clientSecret;
         private String scopes;
-        private Bundle[] headers;
+        private HashMap<String, String> headers;
         private String acrValues;
         private String acrKey;
         private String redirectUri;
@@ -277,8 +415,8 @@ public class TrustSSO {
             return this;
         }
 
-        public TrustSSOBuilder setHeaders(Bundle[] headers) {
-            if (headers != null && headers.length > 0) {
+        public TrustSSOBuilder setHeaders(HashMap<String, String> headers) {
+            if (headers != null) {
                 this.headers = headers;
             } else {
                 TrustLoggerSSO.d("Headers cannot be null or empty");
@@ -290,7 +428,7 @@ public class TrustSSO {
             if (acrValues != null && !acrValues.equals("")) {
                 this.acrValues = acrValues;
             } else {
-                TrustLoggerSSO.d("Acr Values Secret cannot be null or empty");
+                TrustLoggerSSO.d("Acr Values cannot be null or empty");
             }
             return this;
         }
@@ -366,6 +504,7 @@ public class TrustSSO {
                 instance.clientSecret = this.clientSecret;//
                 instance.acrKey = this.acrKey;
                 instance.acrValues = this.acrValues;
+                TrustLoggerSSO.d("BUILD: " + this.acrValues);
                 instance.baseURL = this.baseURL;//
                 instance.grantType = this.grantType;
                 instance.headers = this.headers;

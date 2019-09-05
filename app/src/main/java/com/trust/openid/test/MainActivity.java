@@ -8,35 +8,62 @@ import android.widget.Button;
 
 import com.trust.openid.sso.client.TrustSSO;
 
+import java.util.HashMap;
+
 public class MainActivity extends AppCompatActivity {
-    Button boton;
+    Button boton, boton1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         boton = findViewById(R.id.web);
+        boton1 = findViewById(R.id.web2);
 
         boton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bundle header = new Bundle();
-                header.putString("Autentia-Client-Id", "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!145D.F522.FFC3.439E");
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Autentia-Client-Id", "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!D9CA.ABCD.F686.9C3C");
+
                 TrustSSO trustSSO = new TrustSSO.TrustSSOBuilder(MainActivity.this)
                         .setAcrKey("acr_values")
-                        .setAcrValues("autoidentify")
-                        .setScopes("openid+uma_protection+profile+profile.r+profile.w+address+audit.r+audit.w")
-                        .setRedirectUri("trust.enrollment.app://auth.id")
+                        .setAcrValues("login_autentiax")
+                        .setScopes("address+email+openid+profile+uma_protection+mobile_phone+phone+document.r")
+                        .setRedirectUri("identidad.digital://auth.id")
                         .setBaseUrl("https://api.autentia.id/oxauth/restv1/")
-                        .setClientID("@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!145D.F522.FFC3.439E")
-                        .setClientSecret("P2qr7PbPR3QxMMRIJwxqWO81")
+                        .setClientID("@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!D9CA.ABCD.F686.9C3C")
+                        .setClientSecret("Ds48vEADZb4c7a87LWGUJ4Kv")
                         .setMethodAuthorize("authorize")
                         .setMethodToken("token")
-                        .setGrantType("refresh_token")
+                        .setGrantType("authorization_code")
                         .setResponseType("code")
-                        .setHeaders(new Bundle[]{header})
+                        .setHeaders(headers)
                         .build();
+                trustSSO.authorizationRequest();
+            }
+        });
 
+        boton1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                headers.put("Autentia-Client-Id", "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!D9CA.ABCD.F686.9C3C");
+
+                TrustSSO trustSSO = new TrustSSO.TrustSSOBuilder(MainActivity.this)
+                        .setAcrKey("acr_values")
+                        .setAcrValues("update_password_autentiax")
+                        .setScopes("address email openid profile uma_protection mobile_phone phone document.r")
+                        .setRedirectUri("identidad.digital://auth.id")
+                        .setBaseUrl("https://api.autentia.id/oxauth/restv1/")
+                        .setClientID("@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!D9CA.ABCD.F686.9C3C")
+                        .setClientSecret("Ds48vEADZb4c7a87LWGUJ4Kv")
+                        .setMethodAuthorize("authorize")
+                        .setMethodToken("token")
+                        .setGrantType("authorization_code")
+                        .setResponseType("code")
+                        .setHeaders(headers)
+                        .build();
                 trustSSO.authorizationRequest();
             }
         });
