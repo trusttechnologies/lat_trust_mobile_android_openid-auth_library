@@ -1,15 +1,10 @@
 package com.trust.openid.sso.network;
 
-import android.os.Bundle;
-
-import com.trust.openid.sso.model.AuthorizeSSO;
 import com.trust.openid.sso.network.res.TokenResponse;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import retrofit2.Call;
-import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.Header;

@@ -4,8 +4,8 @@ public class ConstantsSSO {
     public static final String BASE_URL_SSO = "base.url.sso";
     static final String AUTHORIZATIONSSO = "authorization.sso";
     static final String TOKENRESPONSESSO = "token.response.sso";
-    public static final String TIME_OUT = "time.out";
-    public static final String REFRESH_TOKEN = "refresh_token";
+    static final String TIME_OUT = "time.out";
+    static final String REFRESH_TOKEN = "refresh_token";
 
     static final String SCOPE = "scope";
     static final String RESPONSE_TYPE = "response_type";
