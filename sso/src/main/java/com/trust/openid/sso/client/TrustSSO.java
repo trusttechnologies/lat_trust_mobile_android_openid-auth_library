@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.nfc.cardemulation.HostApduService;
+import android.os.Build;
 import android.provider.Browser;
 import android.util.Base64;
 
@@ -58,6 +59,11 @@ public class TrustSSO {
     private static TrustSSO instance = new TrustSSO();
 
     private TrustSSO() {
+    }
+
+    public static String getBundleId(Context context) {
+
+        return context.getPackageName();
     }
 
     public String getSession_id() {
@@ -166,14 +172,20 @@ public class TrustSSO {
                         tokenResponse.getRefresh_token()).enqueue(new Callback<TokenResponse>() {
                     @Override
                     public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
-                        TrustLoggerSSO.d(response.body().getAccess_token());
-                        if (response.isSuccessful()) {
-                            Hawk.put(TIME_OUT, System.currentTimeMillis() / 1000);
-                            Hawk.put(TOKENRESPONSESSO, response.body());
-                            listener.onSucces(response.body().getAccess_token());
+                        if (response != null && response.body() != null) {
+                            TrustLoggerSSO.d(response.body().getAccess_token());
+                            if (response.isSuccessful()) {
+                                Hawk.put(TIME_OUT, System.currentTimeMillis() / 1000);
+                                Hawk.put(TOKENRESPONSESSO, response.body());
+                                listener.onSucces(response.body().getAccess_token());
+                            } else {
+                                listener.onError("refresh token expired");
+                            }
                         } else {
                             listener.onError("refresh token expired");
+
                         }
+
                     }
 
                     @Override
@@ -252,13 +264,14 @@ public class TrustSSO {
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
                     public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
-                        if (response.code() != 400 && response.code() != 500 && response.body() != null) {
+                        if (response != null && response.body() != null) {
                             Hawk.put(TOKENRESPONSESSO, response.body());
                             Hawk.put(TIME_OUT, System.currentTimeMillis() / 1000);
                             listener.onSucces(response.body().getAccess_token());
                         } else {
-                            listener.onError(response.message());
+                            listener.onError("error getting token.");
                         }
+
                     }
 
                     @Override

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.trust.openid.sso.TrustLoggerSSO;
 import com.trust.openid.sso.client.TrustSSO;
 
 import java.util.HashMap;
@@ -19,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         boton = findViewById(R.id.web);
         boton1 = findViewById(R.id.web2);
-
+        TrustLoggerSSO.d(TrustSSO.getBundleId(this));
         boton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
                         .setHeaders(headers)
                         .build();
                 trustSSO.authorizationRequest();
+
             }
         });
 

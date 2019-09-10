@@ -12,19 +12,6 @@ public class App extends Application {
 
     private void initSSO() {
 
-        /*
-         * secret
-         * id---
-         * scopes
-         * header*
-         * acr values
-         * redirect_uri
-         * base_url
-         * authorize
-         * token
-         * grant_type
-         *
-         * */
     }
 
 
