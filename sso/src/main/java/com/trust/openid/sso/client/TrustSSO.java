@@ -121,24 +121,14 @@ public class TrustSSO {
         try {
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
             CustomTabsIntent customTabsIntent = builder.build();
+            customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             if (this.headers != null) {
                 TrustLoggerSSO.d(headers.get("Autentia-Client-Id").toString());
                 customTabsIntent.intent.putExtra(Browser.EXTRA_HEADERS, headers);
             }
             TrustLoggerSSO.d("launchCustomTab: " + uri.toString());
-            TrustSSO trustSSO = getInstance();
-            TrustLoggerSSO.d(trustSSO.acrKey);
-            TrustLoggerSSO.d(trustSSO.acrValues);
 
-            TrustLoggerSSO.d(trustSSO.baseURL);
-            TrustLoggerSSO.d(trustSSO.clientID);
-            TrustLoggerSSO.d(trustSSO.clientSecret);
-            TrustLoggerSSO.d(trustSSO.grantType);
-            TrustLoggerSSO.d(trustSSO.methodAuthorize);
-            TrustLoggerSSO.d(trustSSO.methodToken);
-            TrustLoggerSSO.d(trustSSO.redirecUri);
-            TrustLoggerSSO.d(trustSSO.responseType);
-            TrustLoggerSSO.d(trustSSO.scopes);
             customTabsIntent.launchUrl(this.context, uri);
         } catch (Exception ex) {
             TrustLoggerSSO.d("Launch Custom Tab: " + ex.getMessage());
