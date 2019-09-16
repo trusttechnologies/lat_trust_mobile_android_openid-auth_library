@@ -122,6 +122,7 @@ public class TrustSSO {
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
             CustomTabsIntent customTabsIntent = builder.build();
             customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            customTabsIntent.intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             if (this.headers != null) {
                 TrustLoggerSSO.d(headers.get("Autentia-Client-Id").toString());
