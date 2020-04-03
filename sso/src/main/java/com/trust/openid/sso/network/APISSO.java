@@ -26,12 +26,21 @@ public interface APISSO {
 
     @FormUrlEncoded
     @POST("token")
-    Call<TokenResponse> refreshToken(@Header("Authorization") String bearer,
-                                     @Header("Autentia-Client-Id") String aci,
-                                     @Field("grant_type") String grant_type,
-                                     @Field("client_id") String client_id,
-                                     @Field("client_secret") String client_secret,
-                                     @Field("refresh_token") String refresh_token
+    Call<TokenResponse> token(
+            @Field("grant_type") String code,
+            @Field("scope") String scope,
+            @Field("code") String grant_type,
+            @Field("redirect_uri") String redirect_uri
+
+    );
+
+    @FormUrlEncoded
+    @POST("token")
+    Call<TokenResponse> refreshToken(
+            @Field("grant_type") String grant_type,
+            @Field("client_id") String client_id,
+            @Field("client_secret") String client_secret,
+            @Field("refresh_token") String refresh_token
 
     );
 }

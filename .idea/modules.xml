@@ -3,6 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lat_trust_mobile_android_openid-auth_library.iml" filepath="$PROJECT_DIR$/lat_trust_mobile_android_openid-auth_library.iml" group="lat_trust_mobile_android_openid-auth_library" />
+      <module fileurl="file://$PROJECT_DIR$/app/lat_trust_mobile_android_openid-auth_library-app.iml" filepath="$PROJECT_DIR$/app/lat_trust_mobile_android_openid-auth_library-app.iml" group="lat_trust_mobile_android_openid-auth_library/app" />
+      <module fileurl="file://$PROJECT_DIR$/sso/lat_trust_mobile_android_openid-auth_library-sso.iml" filepath="$PROJECT_DIR$/sso/lat_trust_mobile_android_openid-auth_library-sso.iml" group="lat_trust_mobile_android_openid-auth_library/sso" />
       <module fileurl="file://$PROJECT_DIR$/openid.iml" filepath="$PROJECT_DIR$/openid.iml" />
       <module fileurl="file://$PROJECT_DIR$/sso/sso.iml" filepath="$PROJECT_DIR$/sso/sso.iml" />
     </modules>

@@ -28,7 +28,7 @@ ext {
     siteUrl = 'https://github.com/trusttechnologies/lat_trust_mobile_android_openid-auth_library'
     gitUrl = 'https://github.com/trusttechnologies/lat_trust_mobile_android_openid-auth_library.git'
 
-    libraryVersion = '0.0.7'
+    libraryVersion = '0.0.8'
 
     developerId = 'fcaro'
     developerName = 'Felipe Caro'
@@ -47,7 +47,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
-        versionName "0.0.7"
+        versionName "0.0.9"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         tasks.withType(Javadoc).all { enabled = false }

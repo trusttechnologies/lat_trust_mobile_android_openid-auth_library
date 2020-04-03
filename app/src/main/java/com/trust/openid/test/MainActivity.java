@@ -25,23 +25,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 HashMap<String, String> headers = new HashMap<String, String>();
-                headers.put("Autentia-Client-Id", "@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!D9CA.ABCD.F686.9C3C");
+                headers.put("Autentia-Client-Id", "bbdc23b7-72ca-4346-b5be-256aebc5d7e6");
 
                 TrustSSO trustSSO = new TrustSSO.TrustSSOBuilder(MainActivity.this)
                         .setAcrKey("acr_values")
-                        .setAcrValues("login_autentiax")
-                        .setScopes("address+email+openid+profile+uma_protection+mobile_phone+phone+document.r")
-                        .setRedirectUri("identidad.digital://auth.id")
-                        .setBaseUrl("https://api.autentia.id/oxauth/restv1/")
-                        .setClientID("@!3011.6F0A.B190.8457!0001!294E.B0CD!0008!D9CA.ABCD.F686.9C3C")
-                        .setClientSecret("Ds48vEADZb4c7a87LWGUJ4Kv")
-                        .setMethodAuthorize("authorize")
+                        .setAcrValues("autoidentify")
+                        .setScopes("clientinfo openid profile")
+                        .setRedirectUri("trust.enrollment.app://auth.id")
+                        .setBaseUrl("https://accounts.stg.trustservices.io/oauth2/")
+                        .setClientID("bbdc23b7-72ca-4346-b5be-256aebc5d7e6")
+                        .setClientSecret("UX9ffahL2D61")
+                        .setMethodAuthorize("auth")
                         .setMethodToken("token")
                         .setGrantType("authorization_code")
                         .setResponseType("code")
                         .setHeaders(headers)
+                        .setState("123123wqeqweqweqwe")
                         .build();
-                trustSSO.authorizationRequest();
+                trustSSO.authorizationRequestWithState();
 
             }
         });
@@ -69,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
                 trustSSO.authorizationRequest();
             }
         });
-
 
 
     }

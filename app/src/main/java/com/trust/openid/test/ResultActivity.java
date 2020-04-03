@@ -13,7 +13,7 @@ public class ResultActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
-        final TrustSSO trustSSO = TrustSSO.getInstance();
+     /*   final TrustSSO trustSSO = TrustSSO.getInstance();
 
 
         trustSSO.getToken(getIntent(), new TrustSSO.TrustAuthListener() {
@@ -28,7 +28,7 @@ public class ResultActivity extends AppCompatActivity {
             public void onError(String error) {
                 TrustLoggerSSO.d("onError: " + error);
             }
-        });
+        });*/
 
 
     }

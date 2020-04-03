@@ -3,8 +3,6 @@ package com.trust.openid.sso.client;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.nfc.cardemulation.HostApduService;
-import android.os.Build;
 import android.provider.Browser;
 import android.util.Base64;
 
@@ -24,7 +22,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static com.trust.openid.sso.client.ConstantsSSO.ACR_VALUE;
 import static com.trust.openid.sso.client.ConstantsSSO.AUTHORIZATIONSSO;
 import static com.trust.openid.sso.client.ConstantsSSO.BASE_URL_SSO;
 import static com.trust.openid.sso.client.ConstantsSSO.CLIENT_ID;
@@ -54,7 +51,15 @@ public class TrustSSO {
     private String responseType;
     private String session_id;
     private String session_state;
+    private String state;
 
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
 
     private static TrustSSO instance = new TrustSSO();
 
@@ -117,6 +122,17 @@ public class TrustSSO {
 
     }
 
+    public void authorizationRequestWithState() {
+        try {
+            Uri uri = getUriAuthorizeWithState();
+            TrustLoggerSSO.d("authorizationRequest: " + uri.toString());
+            launchCustomTab(uri);
+        } catch (Exception ex) {
+            TrustLoggerSSO.d("Authorization Request: " + ex.getMessage());
+        }
+
+    }
+
     private void launchCustomTab(Uri uri) {
         try {
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
@@ -155,8 +171,6 @@ public class TrustSSO {
             }
             if ((time_now - time_past) > tokenResponse.getExpires_in()) {
                 RestClientSSO.get().refreshToken(
-                        "Basic " + getAuthorization(authorizeSSO),
-                        authorizeSSO.getClient_id(),
                         REFRESH_TOKEN,
                         authorizeSSO.getClient_id(),
                         authorizeSSO.getClient_secret(),
@@ -203,7 +217,26 @@ public class TrustSSO {
                 .appendQueryParameter(RESPONSE_TYPE, this.responseType)
                 .appendQueryParameter(REDIRECT_URI, this.redirecUri)
                 .appendQueryParameter(CLIENT_ID, this.clientID)
-                .appendQueryParameter(this.acrKey, this.acrValues).build();
+                .appendQueryParameter(this.acrKey, this.acrValues)
+                .build();
+
+
+        TrustLoggerSSO.d("getUriAuthorize: " + this.acrValues);
+
+        return uri;
+    }
+
+    private Uri getUriAuthorizeWithState() {
+
+        Uri uri = Uri.parse(this.baseURL)
+                .buildUpon()
+                .appendPath(this.methodAuthorize)
+                .appendQueryParameter(SCOPE, this.scopes)
+                .appendQueryParameter(RESPONSE_TYPE, this.responseType)
+                .appendQueryParameter(REDIRECT_URI, this.redirecUri)
+                .appendQueryParameter(CLIENT_ID, this.clientID)
+                .appendQueryParameter(this.acrKey, this.acrValues)
+                .appendQueryParameter("state", this.state).build();
 
 
         TrustLoggerSSO.d("getUriAuthorize: " + this.acrValues);
@@ -213,15 +246,17 @@ public class TrustSSO {
 
     public void getToken(Intent intent, TrustAuthListener authListener) {
         try {
-            if (Hawk.contains(TIME_OUT)) {
+           /* if (Hawk.contains(TIME_OUT)) {
+
                 refreshToken(authListener);
                 return;
-            }
+            }*/
+            // refreshToken(authListener);
             Uri data = getUriFromIntent(intent);
             if (data == null) {
                 throw new Exception("Get Token: data from intent cannot be null");
             }
-            AuthorizeSSO authorizeSSO = getAuthorizeSSO(data);
+            AuthorizeSSO authorizeSSO = getAuthorizeSSOWithState(data);
             getTokenFromApi(authorizeSSO, authListener);
         } catch (Exception ex) {
             TrustLoggerSSO.d("Get Token: " + ex.getMessage());
@@ -267,7 +302,7 @@ public class TrustSSO {
 
                     @Override
                     public void onFailure(Call<TokenResponse> call, Throwable t) {
-                        listener.onError(t.getMessage());
+                        listener.onError("onFailure: " + t.getMessage());
                     }
                 });
     }
@@ -308,6 +343,61 @@ public class TrustSSO {
         }
 
     }
+
+    private AuthorizeSSO getAuthorizeSSOWithState(Uri data) {
+        TrustLoggerSSO.d(data.toString());
+        AuthorizeSSO authorizeSSO = new AuthorizeSSO();
+        if (data == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: data uri cannot be null");
+            return new AuthorizeSSO();
+        }
+        if (data.getQueryParameter(CODE) == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: code cannot be null");
+            return new AuthorizeSSO();
+        }
+        if (data.getQueryParameter(SCOPE) == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: scope cannot be null");
+            return new AuthorizeSSO();
+        }
+      /*  if (data.getQueryParameter(SESSION_ID) == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: session id cannot be null");
+            return new AuthorizeSSO();
+        }
+        if (data.getQueryParameter(SESSION_STATE) == null) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: session state cannot be null");
+            return new AuthorizeSSO();
+        }*/
+        if (this.grantType == null || this.grantType.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: grant type cannot be null or empty");
+            return new AuthorizeSSO();
+        }
+        if (this.redirecUri == null || this.redirecUri.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: redirect uri cannot be null or empty");
+            return new AuthorizeSSO();
+        }
+        if (this.clientSecret == null || this.clientSecret.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: client secret cannot be null or empty");
+            return new AuthorizeSSO();
+        }
+        if (this.clientID == null || this.clientID.equals("")) {
+            TrustLoggerSSO.d("Get AuthorizeSSO: client id cannot be null or empty");
+            return new AuthorizeSSO();
+        }
+        authorizeSSO.setCode(data.getQueryParameter(CODE));
+        authorizeSSO.setGrantType(this.grantType);
+        authorizeSSO.setScope(data.getQueryParameter(SCOPE));
+        authorizeSSO.setRedirect_uri(this.redirecUri);
+        authorizeSSO.setClient_id(this.clientID);
+        authorizeSSO.setClient_secret(this.clientSecret);
+        // authorizeSSO.setSession_id(data.getQueryParameter(SESSION_ID));
+        //authorizeSSO.setSession_state(data.getQueryParameter(SESSION_STATE));
+        TrustSSO trustSSO = getInstance();
+        trustSSO.setSession_id(data.getQueryParameter(SESSION_ID));
+        trustSSO.setSession_state(data.getQueryParameter(SESSION_STATE));
+        Hawk.put(AUTHORIZATIONSSO, authorizeSSO);
+        return authorizeSSO;
+    }
+
 
     private AuthorizeSSO getAuthorizeSSO(Uri data) {
         TrustLoggerSSO.d(data.toString());
@@ -397,6 +487,7 @@ public class TrustSSO {
         private String methodToken;
         private String methodAuthorize;
         private String responseType;
+        private String state;
 
         public TrustSSOBuilder(Context context) {
             this.context = context;
@@ -408,6 +499,15 @@ public class TrustSSO {
                 this.clientID = clientID;
             } else {
                 TrustLoggerSSO.d("Client Id cannot be null or empty");
+            }
+            return this;
+        }
+
+        public TrustSSOBuilder setState(String state) {
+            if (state != null && !state.equals("")) {
+                this.state = state;
+            } else {
+                TrustLoggerSSO.d("state cannot be null or empty");
             }
             return this;
         }
@@ -519,7 +619,6 @@ public class TrustSSO {
                 instance.clientSecret = this.clientSecret;//
                 instance.acrKey = this.acrKey;
                 instance.acrValues = this.acrValues;
-                TrustLoggerSSO.d("BUILD: " + this.acrValues);
                 instance.baseURL = this.baseURL;//
                 instance.grantType = this.grantType;
                 instance.headers = this.headers;
@@ -529,6 +628,7 @@ public class TrustSSO {
                 instance.scopes = this.scopes;//
                 instance.responseType = this.responseType;
                 instance.context = this.context;//
+                instance.state = this.state;
                 return instance;
 
             } catch (Exception ex) {

@@ -25,7 +25,12 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 }
+ext {
+    retrofitVersion = "2.4.0"
+    okhttpVersion = "3.10.0"
+    hawkVersion = "2.0.1"
 
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.0.2'
@@ -33,5 +38,16 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+
+
+    // -- OKHTTP
+    implementation "com.squareup.okhttp3:logging-interceptor:${okhttpVersion}"
+    implementation "com.squareup.okhttp3:okhttp:${okhttpVersion}"
+    implementation "com.squareup.okhttp3:okhttp-urlconnection:${okhttpVersion}"
+    // -- RETROFIT
+    implementation "com.squareup.retrofit2:retrofit:${retrofitVersion}"
+    implementation "com.squareup.retrofit2:converter-gson:${retrofitVersion}"
+    implementation "com.orhanobut:hawk:${hawkVersion}"
+
     implementation project(path: ':sso')
 }
