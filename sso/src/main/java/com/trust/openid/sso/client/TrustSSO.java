@@ -14,6 +14,7 @@ import com.orhanobut.hawk.Hawk;
 import com.trust.openid.sso.TrustLoggerSSO;
 import com.trust.openid.sso.model.AuthorizeSSO;
 import com.trust.openid.sso.network.RestClientSSO;
+import com.trust.openid.sso.network.res.RestClientUser;
 import com.trust.openid.sso.network.res.TokenResponse;
 
 import java.util.HashMap;
@@ -244,7 +245,7 @@ public class TrustSSO {
         return uri;
     }
 
-    public void getToken(Intent intent, TrustAuthListener authListener) {
+    public void getToken(Intent intent, TrustSSOListener authListener) {
         try {
            /* if (Hawk.contains(TIME_OUT)) {
 
@@ -258,13 +259,14 @@ public class TrustSSO {
             }
             AuthorizeSSO authorizeSSO = getAuthorizeSSOWithState(data);
             getTokenFromApi(authorizeSSO, authListener);
+
         } catch (Exception ex) {
             TrustLoggerSSO.d("Get Token: " + ex.getMessage());
         }
 
     }
 
-    private void getTokenFromApi(AuthorizeSSO authorizeSSO, TrustAuthListener listener) {
+    private void getTokenFromApi(AuthorizeSSO authorizeSSO, TrustSSOListener listener) {
         validateAuthorizeSSO(authorizeSSO);
         if (this.headers != null) {
             getTokenWithCustomHeaders(authorizeSSO, listener);
@@ -273,12 +275,14 @@ public class TrustSSO {
         }
     }
 
+
+
     private void getTokenDefault(AuthorizeSSO authorizeSSO) {
         //llamada para obtener access token con 0 cabeceras
 
     }
 
-    private void getTokenWithCustomHeaders(AuthorizeSSO authorizeSSO, final TrustAuthListener listener) {
+    private void getTokenWithCustomHeaders(AuthorizeSSO authorizeSSO, final TrustSSOListener listener) {
         String authorization = getAuthorization(authorizeSSO);
         RestClientSSO.get().token(
                 "Basic " + authorization, //base64(client_id:client_secret)
@@ -293,18 +297,35 @@ public class TrustSSO {
                         if (response != null && response.body() != null) {
                             Hawk.put(TOKENRESPONSESSO, response.body());
                             Hawk.put(TIME_OUT, System.currentTimeMillis() / 1000);
-                            listener.onSucces(response.body().getAccess_token());
+                          //  listener.getUser(response.body().getAccess_token());
+                            getUserInfo(response.body().getAccess_token(), listener);
                         } else {
-                            listener.onError("error getting token.");
                         }
 
                     }
 
                     @Override
                     public void onFailure(Call<TokenResponse> call, Throwable t) {
-                        listener.onError("onFailure: " + t.getMessage());
+                       // listener.onError("onFailure: " + t.getMessage());
                     }
                 });
+    }
+
+    private void getUserInfo(String accessToken , final TrustSSOListener listener ) {
+        RestClientUser.setup().getUserInfo(accessToken).enqueue(new Callback<JsonElement>() {
+            @Override
+            public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
+
+                listener.getUser(response.body());
+
+            }
+
+            @Override
+            public void onFailure(Call<JsonElement> call, Throwable t) {
+                TrustLoggerSSO.d(t.getMessage());
+
+            }
+        });
     }
 
     private String getAuthorization(AuthorizeSSO authorizeSSO) {

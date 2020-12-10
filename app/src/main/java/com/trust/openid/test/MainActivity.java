@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAcrValues("autoidentify")
                         .setScopes("clientinfo openid profile")
                         .setRedirectUri("trust.enrollment.app://auth.id")
-                        .setBaseUrl("https://accounts.stg.trustservices.io/oauth2/")
+                        .setBaseUrl("https://accounts.autentiaplus.id/oauth2/")
                         .setClientID("bbdc23b7-72ca-4346-b5be-256aebc5d7e6")
                         .setClientSecret("UX9ffahL2D61")
                         .setMethodAuthorize("auth")

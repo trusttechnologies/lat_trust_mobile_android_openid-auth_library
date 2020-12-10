@@ -1,5 +1,6 @@
 package com.trust.openid.sso.network;
 
+import com.google.gson.JsonElement;
 import com.trust.openid.sso.network.res.TokenResponse;
 
 import java.util.HashMap;
@@ -7,9 +8,11 @@ import java.util.HashMap;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.HeaderMap;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 public interface APISSO {
 
@@ -43,4 +46,8 @@ public interface APISSO {
             @Field("refresh_token") String refresh_token
 
     );
+
+    @GET("userinfo")
+    Call<JsonElement> getUserInfo(@Query("access_token") String accessToken);
+
 }

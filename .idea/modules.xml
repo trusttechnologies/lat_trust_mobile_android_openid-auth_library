@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/lat_trust_mobile_android_openid-auth_library.iml" filepath="$PROJECT_DIR$/lat_trust_mobile_android_openid-auth_library.iml" group="lat_trust_mobile_android_openid-auth_library" />
-      <module fileurl="file://$PROJECT_DIR$/app/lat_trust_mobile_android_openid-auth_library-app.iml" filepath="$PROJECT_DIR$/app/lat_trust_mobile_android_openid-auth_library-app.iml" group="lat_trust_mobile_android_openid-auth_library/app" />
-      <module fileurl="file://$PROJECT_DIR$/sso/lat_trust_mobile_android_openid-auth_library-sso.iml" filepath="$PROJECT_DIR$/sso/lat_trust_mobile_android_openid-auth_library-sso.iml" group="lat_trust_mobile_android_openid-auth_library/sso" />
-      <module fileurl="file://$PROJECT_DIR$/openid.iml" filepath="$PROJECT_DIR$/openid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/sso/sso.iml" filepath="$PROJECT_DIR$/sso/sso.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/app.iml" group="lat_trust_mobile_android_openid-auth_library/app" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lat_trust_mobile_android_openid-auth_library.iml" filepath="$PROJECT_DIR$/.idea/modules/lat_trust_mobile_android_openid-auth_library.iml" group="lat_trust_mobile_android_openid-auth_library" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/lat_trust_mobile_android_openid-auth_library.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/lat_trust_mobile_android_openid-auth_library.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sso/lat_trust_mobile_android_openid-auth_library.sso.iml" filepath="$PROJECT_DIR$/.idea/modules/sso/lat_trust_mobile_android_openid-auth_library.sso.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sso/sso.iml" filepath="$PROJECT_DIR$/.idea/modules/sso/sso.iml" group="lat_trust_mobile_android_openid-auth_library/sso" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/trust_work.lat_trust_mobile_android_openid-auth_library.iml" filepath="$PROJECT_DIR$/.idea/modules/trust_work.lat_trust_mobile_android_openid-auth_library.iml" />
     </modules>
   </component>
 </project>
