@@ -10,6 +10,7 @@ import com.google.gson.JsonElement;
 import com.orhanobut.hawk.Hawk;
 import com.trust.openid.sso.TrustLoggerSSO;
 import com.trust.openid.sso.client.TrustSSO;
+import com.trust.openid.sso.client.TrustSSOListener;
 
 import javax.security.auth.login.LoginException;
 
@@ -18,7 +19,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 
-public class ITrustResultActivity extends AppCompatActivity {
+public class ITrustResultActivity extends AppCompatActivity implements TrustSSOListener  {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,22 +31,11 @@ public class ITrustResultActivity extends AppCompatActivity {
         Log.i("TrustLoggerSSO", "onCreate: " + new Gson().toJson(Hawk.get("token.response.sso")));
         Log.i("TrustLoggerSSO", "onCreate: " + trustSSO.getAcrValues());
         Log.i("TrustLoggerSSO", "onCreate: " + new Gson().toJson(getIntent().getData().toString()));
-        trustSSO.getToken(getIntent(), new TrustSSO.TrustAuthListener() {
-            @Override
-            public void onSucces(String accessToken) {
-                TrustLoggerSSO.d("accessToken: " + accessToken);
-                getUserInfo(accessToken);
-            }
-
-            @Override
-            public void onError(String error) {
-                TrustLoggerSSO.d("onError: " + error);
-            }
-        });
+        trustSSO.getToken(getIntent() ,this);
     }
 
 
-    private void getUserInfo(String accessToken) {
+    private void getUserInfo(String accessToken  ) {
         RestClientTrust.setup().getUserInfo(accessToken).enqueue(new Callback<JsonElement>() {
             @Override
             public void onResponse(Call<JsonElement> call, Response<JsonElement> response) {
@@ -58,5 +48,11 @@ public class ITrustResultActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+
+    @Override
+    public void getUser(Object user) {
+        Log.e(getClass().getSimpleName(), new Gson().toJson(user));
     }
 }
